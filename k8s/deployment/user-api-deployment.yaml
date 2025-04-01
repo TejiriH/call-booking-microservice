@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-api
+  namespace: user
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-api
+  template:
+    metadata:
+      labels:
+        app: user-api
+    spec:
+      nodeSelector:
+        role: user
+      containers:
+        - name: user-api
+          image: tejirih/user-api:latest
+          ports:
+            - containerPort: 1026
+          env:
+            - name: PORT
+              value: "1026"
+
+            - name: MONGO_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-secret
+                  key: MONGO_INITDB_ROOT_USERNAME
+
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-secret
+                  key: MONGO_INITDB_ROOT_PASSWORD
+
+            - name: MONGO_URL
+              value: "mongodb://$(MONGO_USER):$(MONGO_PASSWORD)@mongodb-svc.database.svc.cluster.local:27017/?retryWrites=true&w=majority"
+
+            - name: ADMIN_EMAIL
+              value: "Henryfly09winner@gmail.com"
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "800Mi"
+            limits:
+              cpu: "800m"
+              memory: "900Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-api
+  namespace: user
+spec:
+  selector:
+    app: user-api
+  ports:
+    - protocol: TCP
+      port: 1026
+      targetPort: 1026
+  type: ClusterIP
+

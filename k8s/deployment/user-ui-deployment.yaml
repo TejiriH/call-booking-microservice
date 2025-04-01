@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-ui
+  namespace: user
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-ui
+  template:
+    metadata:
+      labels:
+        app: user-ui
+    spec:
+      nodeSelector:
+        role: user
+      containers:
+        - name: user-ui
+          image: tejirih/user-ui:latest
+          ports:
+            - containerPort: 80
+          env:
+            - name: REACT_APP_API_URL
+              value: "http://user-api:1026"
+          resources:
+            requests:
+              memory: "500Mi"
+              cpu:  "500m"
+            limits:
+              memory: "800Mi"
+              cpu: "900m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-ui
+  namespace: user
+spec:
+  selector:
+    app: user-ui
+  ports:
+    - protocol: TCP
+      port: 3002
+      targetPort: 80
+  type: LoadBalancer

@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-ui
+  namespace: admin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: admin-ui
+  template:
+    metadata:
+      labels:
+        app: admin-ui
+    spec:
+      nodeSelector:
+        role: admin
+      containers:
+        - name: admin-ui
+          image: tejirih/admin-ui:latest
+          ports:
+            - containerPort: 80
+          env:
+            - name: REACT_APP_API_URL
+              value: "http://admin-api:1025"
+          resources:
+            requests:
+              memory: "500Mi"
+              cpu:  "500m"
+            limits:
+              memory: "800Mi"
+              cpu: "900m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin-ui
+  namespace: admin
+spec:
+  selector:
+    app: admin-ui
+  ports:
+    - protocol: TCP
+      port: 3001
+      targetPort: 80
+  type: LoadBalancer

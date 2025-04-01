@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # Traefik Reverse Proxy
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    restart: always
+    command:
+      - "--api.insecure=true"  # Enable Traefik dashboard
+      - "--providers.docker=true"  # Enable Docker provider
+      - "--entrypoints.web.address=:80"  # Listen on port 80
+    ports:
+      - "80:80"  # HTTP access
+      - "8080:8080"  # Traefik Dashboard (optional)
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"  # Access Docker API
+
+  # MongoDB Database
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongoadmin
+      MONGO_INITDB_ROOT_PASSWORD: passwd
+    ports:
+      - "27017:27017"
+
+  # Admin API
+  admin-api:
+    image: tejirih/admin-api:latest
+    container_name: admin-api
+    restart: always
+    environment:
+      MONGO_URL: "mongodb://mongoadmin:passwd@mongodb:27017/?retryWrites=true&w=majority"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.admin-api.rule=PathPrefix(`/admin-api`)"
+      - "traefik.http.services.admin-api.loadbalancer.server.port=1004"
+
+  # User API
+  user-api:
+    image: tejirih/user-api:latest
+    container_name: user-api
+    restart: always
+    environment:
+      MONGO_URL: "mongodb://mongoadmin:passwd@mongodb:27017/?retryWrites=true&w=majority"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.user-api.rule=PathPrefix(`/user-api`)"
+      - "traefik.http.services.user-api.loadbalancer.server.port=1004"
+
+  # Admin UI (React + Nginx)
+  admin-ui:
+    image: tejirih/admin-ui:latest
+    container_name: admin-ui
+    restart: always
+    environment:
+      REACT_APP_API_URL: "http://localhost/admin-api"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.admin-ui.rule=PathPrefix(`/admin`)"
+      - "traefik.http.services.admin-ui.loadbalancer.server.port=80"
+
+  # User UI (React + Nginx)
+  user-ui:
+    image: tejirih/user-ui:latest
+    container_name: user-ui
+    restart: always
+    environment:
+      REACT_APP_API_URL: "http://localhost/user-api"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.user-ui.rule=PathPrefix(`/user`)"
+      - "traefik.http.services.user-ui.loadbalancer.server.port=80"

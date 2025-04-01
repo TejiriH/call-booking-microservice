@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongoadmin
+      MONGO_INITDB_ROOT_PASSWORD: passwd
+    ports:
+      - "27017:27017"
+
+  # Admin API
+  admin-api:
+    image: tejirih/admin-api:latest
+    container_name: admin-api
+    restart: always
+    environment:
+      MONGO_URL: "mongodb://mongoadmin:passwd@mongodb:27017/?retryWrites=true&w=majority"
+    ports:
+      - "1004:1004"
+    depends_on:
+      - mongodb
+
+  # User API
+  user-api:
+    image: tejirih/user-api:latest
+    container_name: user-api
+    restart: always
+    environment:
+      MONGO_URL: "mongodb://mongoadmin:passwd@mongodb:27017/?retryWrites=true&w=majority"
+      ADMIN_EMAIL: "Henryfly09winner@gmail.com"
+    ports:
+      - "1005:1004"
+    depends_on:
+      - mongodb
+
+  # Admin UI (React + Nginx)
+  admin-ui:
+    image: tejirih/admin-ui:latest
+    container_name: admin-ui
+    restart: always
+    environment:
+      REACT_APP_API_URL: "http://admin-api:1004"
+    ports:
+      - "3001:80"
+    depends_on:
+      - admin-api
+
+  # User UI (React + Nginx)
+  user-ui:
+    image: tejirih/user-ui:latest
+    container_name: user-ui
+    restart: always
+    environment:
+      REACT_APP_API_URL: "http://user-api:1004"
+    ports:
+      - "3002:80"
+    depends_on:
+      - user-api
+

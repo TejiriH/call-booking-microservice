@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: call-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/tejirih/call-booking-microservice.git  # Change this to your repo
+    targetRevision: main  # Change if using another branch
+    path: k8s/deployment   # Path to your K8s manifests in the repo
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default  # Change if needed
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true

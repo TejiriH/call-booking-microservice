@@ -1,0 +1,40 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: call-app-cluster
+  region: eu-north-1 # Change as needed
+
+managedNodeGroups:
+  - name: admin-group
+    instanceType: t3.large
+    desiredCapacity: 1
+    minSize: 1
+    maxSize: 2
+    labels:
+      role: admin
+    tags:
+      Name: admin-node
+      role: admin
+
+  - name: user-group
+    instanceType: t3.large
+    desiredCapacity: 1
+    minSize: 1
+    maxSize: 2
+    labels:
+      role: user
+    tags:
+      Name: user-node
+      role: user
+
+  - name: database-group
+    instanceType: r5.large
+    desiredCapacity: 1
+    minSize: 1
+    maxSize: 2
+    labels:
+      role: database
+    tags:
+      Name: database-node
+      role: database

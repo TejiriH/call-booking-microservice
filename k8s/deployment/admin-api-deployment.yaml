@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: admin-api
+  namespace: admin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: admin-api
+  template:
+    metadata:
+      labels:
+        app: admin-api
+    spec:
+      nodeSelector:
+        role: admin
+      containers:
+        - name: admin-api
+          image: tejirih/admin-api:latest
+          ports:
+            - containerPort: 1025
+          env:
+            - name:  PORT
+              value: "1025"
+
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-secret
+                  key: MONGO_INITDB_ROOT_USERNAME
+
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-secret
+                  key: MONGO_INITDB_ROOT_PASSWORD
+
+            - name: MONGO_URL
+              value: "mongodb://$(MONGO_INITDB_ROOT_USERNAME):$(MONGO_INITDB_ROOT_PASSWORD)@mongodb-svc.database.svc.cluster.local:27017/?retryWrites=true&w=majority"
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "500Mi"
+            limits:
+              cpu: "800m"
+              memory: "900Mi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin-api
+  namespace: admin
+spec:
+  selector:
+    app: admin-api
+  ports:
+    - protocol: TCP
+      port: 1025
+      targetPort: 1025
+  type: ClusterIP
