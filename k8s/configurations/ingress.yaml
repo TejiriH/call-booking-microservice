@@ -2,25 +2,26 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: app-ingress
-  namespace: argocd  # Change if needed
+  namespace: argocd
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
 spec:
   ingressClassName: nginx
   rules:
   - http:
       paths:
-      - path: /admin
-        pathType: Prefix
+      - path: /admin(/|$)(.*)
+        pathType: ImplementationSpecific
         backend:
           service:
             name: admin-ui
             port:
-              number: 3001
-      - path: /user
-        pathType: Prefix
+              number: 80
+      - path: /user(/|$)(.*)
+        pathType: ImplementationSpecific
         backend:
           service:
             name: user-ui
             port:
-              number: 3002
+              number: 80
+
