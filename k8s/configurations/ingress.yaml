@@ -2,7 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: app-ingress
-  namespace: admin  # Correct namespace for your services
+  namespace: user  # Correct namespace for your services
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /  # Strip the /admin path for backend services
 spec:
